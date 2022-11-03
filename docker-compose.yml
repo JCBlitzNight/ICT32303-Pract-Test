@@ -1,0 +1,66 @@
+version: '3.8'
+
+services:
+  jenkins:
+    container_name: myjenkins-blueocean
+    build:
+      context: ./
+      dockerfile: Dockerfile
+    restart: unless-stopped
+    networks:
+      - docker
+    ports:
+      - 8080:8080
+      - 50000:50000
+    tty: true
+    volumes:
+      - jenkins-data:/var/jenkins_home
+      - jenkins-docker-certs:/certs/client:ro
+      - $HOME/Code:/Code
+    environment:
+      - DOCKER_HOST=tcp://docker:2376
+      - DOCKER_CERT_PATH=/certs/client
+      - DOCKER_TLS_VERIFY=1
+  dind:
+    container_name: ci-dind
+    image: docker:dind
+    privileged: true
+    restart: always
+    networks:
+      docker:
+        aliases:
+          - docker
+    ports:
+      - 2376:2376
+    tty: true
+    volumes:
+      - jenkins-data:/var/jenkins_home
+      - jenkins-docker-certs:/certs/client
+    environment:
+      - DOCKER_TLS_CERTDIR=/certs
+
+  sonarqube:
+    container_name: ci-sonarqube
+    image: sonarqube:community
+    environment:
+      SONAR_ES_BOOTSTRAP_CHECKS_DISABLE: true
+    volumes:
+      - sonarqube-data:/opt/sonarqube/data
+      - sonarqube-extensions:/opt/sonarqube/extensions
+      - sonarqube-logs:/opt/sonarqube/logs
+    networks:
+      - docker
+      - qube
+    ports:
+      - "9000:9000"
+
+networks:
+  docker:
+  qube:
+
+volumes:
+  jenkins-data:
+  jenkins-docker-certs:
+  sonarqube-data:
+  sonarqube-extensions:
+  sonarqube-logs:
