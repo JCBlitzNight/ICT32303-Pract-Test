@@ -3,9 +3,7 @@ version: '3.8'
 services:
   jenkins:
     container_name: myjenkins-blueocean
-    build:
-      context: ./
-      dockerfile: Dockerfile
+    image: cryptoxic/percy-jenkins
     restart: unless-stopped
     networks:
       - docker
@@ -16,7 +14,6 @@ services:
     volumes:
       - jenkins-data:/var/jenkins_home
       - jenkins-docker-certs:/certs/client:ro
-      - $HOME/Code:/Code
     environment:
       - DOCKER_HOST=tcp://docker:2376
       - DOCKER_CERT_PATH=/certs/client
